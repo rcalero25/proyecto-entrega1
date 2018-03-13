@@ -1,0 +1,38 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogStream",
+                "dynamodb:PutItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:UpdateItem",
+                "logs:PutLogEvents"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:us-west-2:227029797649:table/Product",
+                "arn:aws:dynamodb:us-west-2:227029797649:table/Billing",
+                "arn:aws:dynamodb:us-west-2:227029797649:table/Category",
+                "arn:aws:dynamodb:us-west-2:227029797649:table/ImageByProduct",
+                "arn:aws:dynamodb:us-west-2:227029797649:table/ProductByCategory",
+                "arn:aws:logs:*:*:*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": "logs:CreateLogGroup",
+            "Resource": "arn:aws:logs:*:*:*"
+        },
+        {
+            "Sid": "VisualEditor2",
+            "Effect": "Allow",
+            "Action": "states:*",
+            "Resource": "arn:aws:states:us-west-2:227029797649:stateMachine:PublishProductStateMachine"
+        }
+    ]
+}

@@ -1,0 +1,169 @@
+{
+  "Comment": "Applying the Saga pattern with AWS Lambda and Step Functions",
+  "StartAt": "CreateBasicProduct",
+  "States": {
+    "CreateBasicProduct":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:CreateBasicProduct",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.CreateBasicProductError",
+          "Next": "CancelBasicProduct"
+        }
+      ],
+      "ResultPath": "$.CreateBasicProductResult",
+      "Next": "CreateImage"
+    },
+    "CreateImage":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:CreateImage",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.CreateImageError",
+          "Next": "CancelImage"
+        }
+      ],
+      "ResultPath": "$.CreateImageResult",
+      "Next": "CreateCategory"
+    },
+     "CreateCategory":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:CreateCategory",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.CreateCategoryError",
+          "Next": "CancelCategory"
+        }
+      ],
+      "ResultPath": "$.CreateCategoryResult",
+      "Next": "isOutStanding"
+    },
+    "isOutStanding": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.product.outstanding",
+          "BooleanEquals": true,
+          "Next": "ChargeCost"
+        },
+        {
+          "Variable": "$.product.outstanding",
+          "BooleanEquals": false,
+          "Next": "PublishProduct"
+        }
+      ]
+    },
+     "ChargeCost":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:ChargeCost",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.ChargeCostError",
+          "Next": "CancelCharges"
+        }
+      ],
+      "ResultPath": "$.ChargeCostResult",
+      "Next": "PublishProduct"
+    },
+     "PublishProduct":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:PublishProduct",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.PublishProductError",
+          "Next": "CancelPublishProduct"
+        }
+      ],
+      "ResultPath": "$.ChargeCostResult",
+      "End": true
+    },
+     "CancelBasicProduct":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:CancelBasicProduct",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.CancelBasicProductError",
+          "Next": "CancelBasicProduct"
+        }
+      ],
+      "ResultPath": "$.CancelBasicProductResult",
+      "Next": "Fail"
+    },
+     "CancelImage":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:CancelImage",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.CancelImageError",
+          "Next": "CancelImage"
+        }
+      ],
+      "ResultPath": "$.CancelImageResult",
+      "Next": "CancelBasicProduct"
+    },
+     "CancelCategory":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:CancelCategory",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.CancelCategoryError",
+          "Next": "CancelCategory"
+        }
+      ],
+      "ResultPath": "$.CancelCategoryResult",
+      "Next": "CancelImage"
+    },
+     "CancelCharges":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:CancelCharges",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.CancelChargesError",
+          "Next": "CancelCharges"
+        }
+      ],
+      "ResultPath": "$.CancelChargesResult",
+      "Next": "CancelCategory"
+    },
+    "CancelPublishProduct":{
+      "Type": "Task",
+      "Resource": "arn:aws:lambda:us-west-2:227029797649:function:CancelPublishProduct",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "ResultPath": "$.CancelPublishProductError",
+          "Next": "CancelPublishProduct"
+        }
+      ],
+      "ResultPath": "$.CancelChargesResult",
+      "Next": "isCancelOutStanding"
+    },
+    "isCancelOutStanding": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.product.outstanding",
+          "BooleanEquals": true,
+          "Next": "CancelCharges"
+        },
+        {
+          "Variable": "$.product.outstanding",
+          "BooleanEquals": false,
+          "Next": "CancelCategory"
+        }
+      ]
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}
